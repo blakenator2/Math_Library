@@ -23,7 +23,7 @@ class SQLInsert(QThread):
         self.input = input
     def run(self):
         try:
-            con = sqlite3.connect(fr"{Path.home()}\library.db")
+            con = sqlite3.connect(f"{Path.home()}/library.db")
             cur = con.cursor()
             cur.execute(f"""
             INSERT INTO Library VALUES(?,?,?,?,?,?,?,?);
@@ -232,7 +232,7 @@ class CheckWindow(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        con = sqlite3.connect(fr"{Path.home()}\library.db")
+        con = sqlite3.connect(fr"{Path.home()}/library.db")
         cur = con.cursor()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS Library(
