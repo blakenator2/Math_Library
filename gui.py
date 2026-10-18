@@ -26,8 +26,8 @@ class SQLInsert(QThread):
             con = sqlite3.connect(f"{Path.home()}/library.db")
             cur = con.cursor()
             cur.execute(f"""
-            INSERT INTO Library VALUES(?,?,?,?,?,?,?,?);
-            """, (self.input[0], self.input[1], self.input[2], self.input[3], self.input[4], self.input[5], self.input[6], self.input[7]))
+            INSERT INTO Library VALUES(?,?,?,?,?,?,?,?,?);
+            """, (self.input[0], self.input[1], self.input[2], self.input[3], self.input[4], self.input[5], self.input[6], self.input[7], self.input[8]))
             con.commit()
             con.close()
             print("Added!")
@@ -84,6 +84,10 @@ class Scraping(QThread):
                     EC.presence_of_element_located((By.ID, "productTitle"))
                 ).text
 
+            author = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, "bylineInfo"))
+                ).text
+
             bookDesc = driver.find_element(By.ID, "bookDescription_feature_div").text.split("\n")[0]
 
             detailList = driver.find_element(By.ID, "detailBullets_feature_div").text.split("\n")
@@ -91,10 +95,10 @@ class Scraping(QThread):
             for item in detailList:
                 if "Publisher" in item or "Publication date" in item or "Print length" in item or "ISBN-10" in item or "ISBN-13" in item or item[0] == "#":
                     info.append(item)
-            self.finished.emit([name, bookDesc, info]) 
+            self.finished.emit([name, bookDesc, info, author[3:author.find("(")]]) 
         except Exception as e:
             print(e)
-            self.finished.emit(["","",[]])
+            self.finished.emit(["","",[], ""])
 class CheckWindow(QWidget):
     finished = pyqtSignal(list)
     def __init__(self, results):
@@ -102,6 +106,7 @@ class CheckWindow(QWidget):
         self.name = results[0]
         self.desc = results[1]
         self.other = results[2]
+        self.author = results[3]
         self.resize(700, 400)
         self.setWindowTitle("Results")
         try:
@@ -146,6 +151,8 @@ class CheckWindow(QWidget):
             self.dLabel = QLabel("Book Description:")
             self.dEdit = QTextEdit(f"{self.desc}")
             self.dEdit.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+            self.authLabel = QLabel("Author:")
+            self.authEdit = QLineEdit(f"{self.author}")
             self.pLabel = QLabel("Publisher:")
             self.pEdit = QLineEdit(f"{self.publisher}")
             self.dateLabel = QLabel("Date:")
@@ -171,6 +178,8 @@ class CheckWindow(QWidget):
             layout.addWidget(self.nEdit)
             layout.addWidget(self.dLabel)
             layout.addWidget(self.dEdit)
+            layout.addWidget(self.authLabel)
+            layout.addWidget(self.authEdit)
             layout.addWidget(self.pLabel)
             layout.addWidget(self.pEdit)
 
@@ -209,6 +218,7 @@ class CheckWindow(QWidget):
         output = [
             self.nEdit.text(), 
             self.dEdit.toPlainText(),
+            self.authEdit.text(),
             self.pEdit.text(),
             self.dateEdit.text(),
             self.lEdit.text(),
@@ -227,6 +237,7 @@ class CheckWindow(QWidget):
             "",
             "",
             "",
+            "",
         ]
         self.finished.emit(output)
 class MainWindow(QMainWindow):
@@ -238,6 +249,7 @@ class MainWindow(QMainWindow):
             CREATE TABLE IF NOT EXISTS Library(
                 Name TEXT NOT NULL,
                 Description TEXT,
+                Author TEXT,
                 Publisher TEXT,
                 "Publication Date" TEXT,
                 "Print Length" TEXT,

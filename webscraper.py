@@ -34,17 +34,22 @@ def scrape(text):
 
     detailList = driver.find_element(By.ID, "detailBullets_feature_div").text.split("\n")
 
+    author = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "bylineInfo"))
+    ).text
+
     for item in detailList:
         if "Publisher" in item or "Publication date" in item or "Print length" in item or "ISBN-10" in item or "ISBN-13" in item or item[0] == "#":
             info.append(item)
-    return name, bookDesc, info   
-def sqlTable(name, bookDesc, info):
-    con = sqlite3.connect(r"C:\Users\blake\Desktop\Python Code\Ellie Code!\test.db")
+    return name, bookDesc, info, author[3:author.find("(")]   
+def sqlTable(name, bookDesc, info, author):
+    con = sqlite3.connect(r"C:\Users\blake\OneDrive\Desktop\Python Code\Math_Library\test.db")
     cur = con.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS Library(
             Name TEXT NOT NULL,
             Description TEXT,
+            Author TEXT,
             Publisher TEXT,
             "Publication Date" TEXT,
             "Print Length" TEXT,
@@ -56,8 +61,8 @@ def sqlTable(name, bookDesc, info):
         """)
 
     cur.execute(f"""
-    INSERT INTO Library VALUES(?,?,?,?,?,?,?,?);
-    """, (name, bookDesc, info[0][11:], info[1][18:], info[2][14:], info[3][9:], info[4][9:], ", ".join(info[5:])))
+    INSERT INTO Library VALUES(?,?,?,?,?,?,?,?,?);
+    """, (name, bookDesc, author, info[0][11:], info[1][18:], info[2][14:], info[3][9:], info[4][9:], ", ".join(info[5:])))
 
     cur.execute("SELECT * FROM Library;")
     rows = cur.fetchall()
@@ -66,10 +71,10 @@ def sqlTable(name, bookDesc, info):
     cur.close()
     return name, bookDesc, info
 def manual():
-        subprocess.Popen(r'start cmd /k sqlite3 "C:\Users\blake\Desktop\Python Code\Ellie Code!\test.db"', shell=True)
+        subprocess.Popen(r'start cmd /k sqlite3 "C:\Users\blake\OneDrive\Desktop\Python Code\Math_Library\test.db"', shell=True)
     
-# start = time.time()
-# item = "0578036428"
-# name, bookDesc, info = scrape(item)
-# sqlTable(name, bookDesc, info)
-# print(f"This took {time.time()-start:.2f} seconds.")
+start = time.time()
+item = "0578036428"
+name, bookDesc, info, author = scrape(item)
+sqlTable(name, bookDesc, info, author)
+print(f"This took {time.time()-start:.2f} seconds.")
