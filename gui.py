@@ -8,7 +8,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
 from pathlib import Path
-# Need to make cooler place for db to go
+# pyinstaller --onedir --windowed --icon "heart.icns" --name "Library App" gui.py
 
 class StreamWriter(QObject):
     textWritten = pyqtSignal(str)
